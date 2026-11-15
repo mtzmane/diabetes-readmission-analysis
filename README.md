@@ -1,12 +1,16 @@
-# Early Hospital Readmission in Patients with Diabetes: A Descriptive SQL Analysis
+# Early Hospital Readmission in Patients with Diabetes: SQL, Python and Tableau Analysis
 
 ## Overview
 
-This project uses SQL to conduct a descriptive analysis of early hospital readmission among patients with diabetes mellitus, using the Diabetes 130-US Hospitals for Years 1999–2008 dataset from the UCI Machine Learning Repository.
+This project conducts a descriptive analysis of early hospital readmission among patients with diabetes mellitus, using the Diabetes 130-US Hospitals for Years 1999–2008 dataset from the UCI Machine Learning Repository.
 
 The analysis focuses on patient demographics, length of hospital stay, treatment patterns, clinical complexity, admission and discharge pathways, and other hospital-related characteristics.
 
-The project demonstrates a reproducible SQL workflow for data preparation, cohort construction, validation, and descriptive analysis using DuckDB.
+The same analysis is carried out with three tools, and their results are cross-validated:
+
+- **SQL (DuckDB):** data preparation, cohort construction and the main descriptive analysis.
+- **Python (pandas):** an independent reproduction of the full SQL workflow in a Jupyter notebook, with charts.
+- **Tableau Public:** an interactive dashboard of the key findings.
 
 ## Table of Contents
 
@@ -20,8 +24,11 @@ The project demonstrates a reproducible SQL workflow for data preparation, cohor
   - [Analytical Approach](#analytical-approach)
 - [Key Findings](#key-findings)
 - [Interactive Dashboard](#interactive-dashboard)
+- [Python (pandas) Reproduction](#python-pandas-reproduction)
 - [Repository Structure](#repository-structure)
 - [Reproducibility](#reproducibility)
+  - [SQL](#sql)
+  - [Python](#python)
   - [Expected Validation](#expected-validation)
 - [Project Report](#project-report)
 - [Limitations](#limitations)
@@ -33,6 +40,7 @@ The project demonstrates a reproducible SQL workflow for data preparation, cohor
 - Build a reproducible analytical cohort from the original hospital encounter records.
 - Quantify early readmission within 30 days of discharge.
 - Describe readmission patterns across demographic, clinical, treatment, and hospital-related groups.
+- Reproduce the analysis in a second tool to validate the results.
 - Document methodological decisions, data limitations, and reproducibility checks.
 
 ## Dataset
@@ -47,19 +55,22 @@ The principal outcome is early readmission, defined as a readmission recorded as
 
 The original dataset includes `diabetic_data.csv` and `IDS_mapping.csv`. The latter contains mapping information for admission type, admission source, and discharge disposition.
 
-For this project, the mapping information is provided as three separate lookup files:
+For this project, the mapping information is provided as three separate lookup files in `data/reference/`:
 
 - `admission_type.csv`
 - `admission_source.csv`
 - `discharge_disposition.csv`
 
-The original encounter dataset must be downloaded separately and placed in the `data/` directory.
+The original encounter dataset must be downloaded separately and placed in `data/raw/`.
 
 ## Tools
 
-- **SQL:** data cleaning, cohort construction, table joins, Common Table Expressions (CTEs), conditional logic (CASE WHEN), filtering (WHERE), grouping (GROUP BY), sorting (ORDER BY), aggregations, and descriptive analysis.
+- **SQL:** data cleaning, cohort construction, table joins, Common Table Expressions (CTEs), window functions (ROW_NUMBER, RANK), conditional logic (CASE WHEN), filtering (WHERE), grouping (GROUP BY), sorting (ORDER BY), aggregations, and descriptive analysis.
 - **DuckDB:** SQL execution engine.
 - **DBeaver:** database client and query development environment.
+- **Python:** pandas and NumPy for data preparation and analysis; matplotlib and seaborn for charts.
+- **Jupyter:** notebook environment for the Python reproduction.
+- **Tableau Public:** interactive dashboard.
 
 ## Methodology
 
@@ -96,9 +107,15 @@ The analysis is descriptive. No hypothesis tests or multivariable models were pe
 - **Overall early readmission:** 6,285 patients were readmitted within 30 days, representing 8.98% of the final cohort (n = 69,990).
 - **Length of stay:** early readmission rates rose from 7.5% (1–3 days) to 11.8% (8–14 days).
 - **Discharge destination:** the early readmission rate was 26.4% among patients discharged to rehabilitation (n = 1,411), compared with 6.95% among those discharged home (n = 44,322).
+- **Clinical complexity:** rates rose from 5.7% (1–10 medications and 1–4 diagnoses) to 11.1% (21+ medications and 9+ diagnoses).
 - **HbA1c measurement:** HbA1c was measured in 18.35% of the cohort (n = 12,846). Early readmission was 8.40% among patients with a recorded measurement and 9.11% among those without one.
 
 These findings are descriptive and should be interpreted in the context of the study's cohort definitions, group sizes, and methodological limitations.
+
+<p align="center">
+  <img src="plots/04_readmission_by_discharge_destination.png" alt="Early readmission rate by discharge destination" width="49%">
+  <img src="plots/05_clinical_complexity_heatmap.png" alt="Early readmission by medication burden and number of diagnoses" width="49%">
+</p>
 
 ## Interactive Dashboard
 
@@ -112,44 +129,77 @@ These findings are descriptive and should be interpreted in the context of the s
 
 ![Dashboard preview](dashboard/dashboard_preview.png)
 
+## Python (pandas) Reproduction
+
+The notebook [`notebooks/diabetes_early_readmission_pandas.ipynb`](notebooks/diabetes_early_readmission_pandas.ipynb) reproduces the complete SQL workflow in Python, from data loading to the ten analytical questions:
+
+- **Data preparation:** loading, data-quality checks, the binary readmission variable, and lookup tables.
+- **Cohort construction:** the same exclusion and one-encounter-per-patient criteria as the SQL scripts, with the SQL equivalent noted in the code (for example, `ROW_NUMBER()` and `TRY_CAST`).
+- **Analysis:** questions Q1–Q10, each followed by its finding.
+- **Charts:** five figures created with matplotlib and seaborn and saved to `plots/`.
+
+**Cross-validation:** the notebook reproduces the SQL results exactly, including the cohort size (69,990 patients) and the overall early readmission rate (8.98%).
+
 ## Repository Structure
 
 ```text
-diabetes-readmission-sql/
+diabetes-readmission-analysis/
 ├── README.md
 ├── LICENSE
+├── requirements.txt
 ├── sql/
 │   ├── 01_load_and_clean.sql
 │   └── 02_analysis.sql
-├── data/
-│   ├── README.md
-│   ├── admission_type.csv
-│   ├── admission_source.csv
-│   └── discharge_disposition.csv
+├── notebooks/
+│   └── diabetes_early_readmission_pandas.ipynb
+├── plots/
+│   ├── 01_readmission_outcomes.png
+│   ├── 02_readmission_by_length_of_stay.png
+│   ├── 03_readmission_by_hba1c.png
+│   ├── 04_readmission_by_discharge_destination.png
+│   └── 05_clinical_complexity_heatmap.png
 ├── dashboard/
 │   └── dashboard_preview.png
+├── data/
+│   ├── README.md
+│   ├── raw/
+│   └── reference/
+│       ├── admission_type.csv
+│       ├── admission_source.csv
+│       └── discharge_disposition.csv
 └── docs/
     └── early_hospital_readmission_analysis.pdf
 ```
 
-The original `diabetic_data.csv` file should also be placed in `data/` before running the scripts. It is not listed above as a repository file because it is intended to be downloaded from the original source.
+The original `diabetic_data.csv` file is not included in the repository. It must be downloaded from the original source and placed in `data/raw/` before running the scripts or the notebook.
 
 ## Reproducibility
 
 1. Clone or download this repository.
-2. Download `diabetic_data.csv` from the UCI Machine Learning Repository.
-3. Place `diabetic_data.csv` in the `data/` directory alongside the three provided lookup CSV files.
-4. Open the project in DuckDB through a compatible SQL client, such as DBeaver.
-5. Execute `sql/01_load_and_clean.sql` first.
-6. Execute `sql/02_analysis.sql` after the preparation script has completed.
+2. Download `diabetic_data.csv` from the UCI Machine Learning Repository and place it in `data/raw/`.
+
+### SQL
+
+3. Open the project in DuckDB through a compatible SQL client, such as DBeaver.
+4. Execute `sql/01_load_and_clean.sql` first, then `sql/02_analysis.sql`.
 
 The scripts use relative paths beginning with `data/`. If your SQL client runs from a different working directory (for example, DBeaver), set the working directory to the repository root or adjust the paths in the `read_csv_auto` calls.
 
+### Python
+
+3. Create a virtual environment and install the dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Open `notebooks/diabetes_early_readmission_pandas.ipynb` and run all cells (**Kernel → Restart & Run All**). The charts are saved to `plots/`.
+
 ### Expected validation
 
-The cohort construction should reproduce the following record counts:
+Both workflows should reproduce the following record counts:
 
-101,766 original encounters → 69,990 patients in the final analytical cohort
+101,766 original encounters → 69,990 patients in the final analytical cohort (early readmission rate: 8.98%)
 
 Differences may indicate issues with file preparation, paths, lookup data, or the execution of the cohort selection criteria.
 
@@ -170,7 +220,7 @@ See [docs/early_hospital_readmission_analysis.pdf](docs/early_hospital_readmissi
 
 ## License
 
-The SQL code in this repository is released under the MIT License. The dataset remains subject to the terms and conditions specified by the original data provider.
+The code in this repository is released under the MIT License. The dataset remains subject to the terms and conditions specified by the original data provider.
 
 ## Acknowledgments
 
