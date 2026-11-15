@@ -4,8 +4,8 @@
  * Engine: DuckDB. Run from the repository root so the relative paths resolve.
  * Data: UCI Machine Learning Repository, "Diabetes 130-US Hospitals for Years 1999-2008".
  * Reference: Strack et al. (2014), https://doi.org/10.1155/2014/781670
- * Expected files in data/: diabetic_data.csv, admission_type.csv,
- *                          admission_source.csv, discharge_disposition.csv
+  * Expected files: data/raw/diabetic_data.csv and, in data/reference/,
+ *                 admission_type.csv, admission_source.csv, discharge_disposition.csv
  * ============================================================================= */
 
 
@@ -16,7 +16,7 @@
  */
 CREATE OR REPLACE TABLE diabetes_encounters AS
 SELECT *
-FROM read_csv_auto('data/diabetic_data.csv',
+FROM read_csv_auto('data/raw/diabetic_data.csv',
     sample_size = -1,
     nullstr = '?'
 );
@@ -75,15 +75,15 @@ ORDER BY readmitted;
 
 -- 3.1 Admission type
 CREATE OR REPLACE TABLE admission_type AS
-SELECT * FROM read_csv_auto('data/admission_type.csv');
+SELECT * FROM read_csv_auto('data/reference/admission_type.csv');
 
 -- 3.2 Admission source
 CREATE OR REPLACE TABLE admission_source AS
-SELECT * FROM read_csv_auto('data/admission_source.csv');
+SELECT * FROM read_csv_auto('data/reference/admission_source.csv');
 
 -- 3.3 Discharge disposition
 CREATE OR REPLACE TABLE discharge_disposition AS
-SELECT * FROM read_csv_auto('data/discharge_disposition.csv');
+SELECT * FROM read_csv_auto('data/reference/discharge_disposition.csv');
 
 -- 3.4 Check the lookup tables
 SELECT * FROM admission_type LIMIT 6;
